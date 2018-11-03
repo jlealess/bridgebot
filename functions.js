@@ -66,6 +66,25 @@ module.exports.getChannelsList = (event, context, callback) => {
     });
 };
 
+module.exports.getUserList = (event, context, callback) => {
+  const web = new WebClient(token);
+  const body = JSON.parse(event.body);
+  return web.conversations
+    .members({ 
+      channel: body.usergroup 
+    })
+    .then(res => {
+      return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify(res) };
+    })
+    .catch(err => {
+      return { statusCode: 500, headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(
+          {
+            error: err.message
+          }
+        ) };
+    });
+};
+
 module.exports.submitPollQuestion = (event, context, callback) => {
   const body = JSON.parse(event.body);
   return new Promise(resolve => resolve({
@@ -75,7 +94,7 @@ module.exports.submitPollQuestion = (event, context, callback) => {
     },
     body: JSON.stringify({
       success: true,
-      message: JSON.stringify(body.payload)
+      message: JSON.stringify(body)
     })
   }))
 }

@@ -42,6 +42,14 @@ functions:
           path: channels-list
           method: get
           cors: true
+  getUserList:
+    handler: functions.getUserList
+    role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
+    events:
+      - http:
+          path: user-list
+          method: post
+          cors: true
   submitPollQuestion:
     handler: functions.submitPollQuestion
     role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
