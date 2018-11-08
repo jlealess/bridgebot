@@ -71,7 +71,32 @@ module.exports.submitPollQuestion = (event, context, callback) => {
       headers: COMMON_HEADERS,
       body: JSON.stringify({
         success: true,
-        message: `SUCCESSFULLY SAVED QUESTION AT ID: ${ref.id}`
+        message: ref.id
+      })
+    }));
+};
+
+module.exports.getSinglePollQuestion = (event, context, callback) => {
+  const body = JSON.parse(event.body);
+
+  return db
+    .collection("polls")
+    .doc(body.id)
+    .get()
+    .then(doc => ({
+      statusCode: 200,
+      headers: COMMON_HEADERS,
+      body: JSON.stringify({
+        success: true,
+        message: doc.data()
+      })
+    }))
+    .catch(err => ({
+      statusCode: 500,
+      headers: COMMON_HEADERS,
+      body: JSON.stringify({
+        success: false,
+        message: err.message
       })
     }));
 };
@@ -85,7 +110,10 @@ module.exports.getAllPollQuestions = () => {
       headers: COMMON_HEADERS,
       body: JSON.stringify({
         success: true,
-        message: qSnapshot.docs.map(doc => doc.data())
+        message: qSnapshot.docs.map(doc => ({
+          id: doc.id,
+          data: doc.data()
+        }))
       })
     }))
     .catch(err => ({
