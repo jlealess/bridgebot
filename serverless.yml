@@ -66,3 +66,11 @@ functions:
           path: polls
           method: get
           cors: true        
+  getSinglePollQuestion:
+    handler: functions.getSinglePollQuestion
+    role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
+    events:
+      - http:
+          path: poll
+          method: post
+          cors: true        
