@@ -11,36 +11,6 @@ const COMMON_HEADERS = {
   "Access-Control-Allow-Origin": "*"
 };
 
-module.exports.pollGroup = (event, context, callback) => {
-  const web = new WebClient(token);
-  const body = JSON.parse(event.body);
-  return web.chat
-    .postMessage({
-      channel: body.channel,
-      attachments: [
-        {
-          text: "Hello from BridgeBot!"
-        }
-      ]
-    })
-    .then(res => {
-      return {
-        statusCode: 200,
-        headers: COMMON_HEADERS,
-        body: JSON.stringify(res)
-      };
-    })
-    .catch(err => {
-      return {
-        statusCode: 500,
-        headers: COMMON_HEADERS,
-        body: JSON.stringify({
-          error: err.message
-        })
-      };
-    });
-};
-
 module.exports.getChannelsList = (event, context, callback) => {
   const web = new WebClient(token);
   return web.conversations
@@ -70,6 +40,7 @@ module.exports.getUserList = (event, context, callback) => {
     .members({
       channel: body.usergroup
     })
+    .then(data => loopThroughUsers(data))
     .then(res => {
       return {
         statusCode: 200,
@@ -90,6 +61,7 @@ module.exports.getUserList = (event, context, callback) => {
 
 module.exports.submitPollQuestion = (event, context, callback) => {
   const body = JSON.parse(event.body);
+  global.selectedQuestion = body.payload.pollQuestion;
 
   return db
     .collection("polls")
@@ -152,4 +124,59 @@ module.exports.getAllPollQuestions = () => {
         message: err.message
       })
     }));
+};
+
+const loopThroughUsers = users => {
+  const members = users.members;
+  members.forEach(member => messageUser(member));
+};
+
+const messageUser = (event) => {
+  const web = new WebClient(token);
+  return web.chat
+    .postMessage({
+      channel: event,
+      attachments: [
+        {
+          text: global.selectedQuestion,
+          attachment_type: "default",
+          actions: [
+            {
+              name: "answer",
+              text: "Yes",
+              type: "button",
+              value: "yes"
+            },
+            {
+              name: "answer",
+              text: "No",
+              type: "button",
+              value: "no"
+            },
+            {
+              name: "answer",
+              text: "Maybe",
+              type: "button",
+              value: "maybe",
+            }
+          ]
+        }
+      ]
+    })
+    .then(res => {
+      return { 
+        statusCode: 200, 
+        headers: COMMON_HEADERS, 
+        body: JSON.stringify(res) 
+      };
+    })
+    .catch(err => {
+      return { 
+        statusCode: 500, 
+        headers: COMMON_HEADERS, 
+        body: JSON.stringify({
+          error: err.message
+        })
+      };
+    });
 };

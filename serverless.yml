@@ -26,14 +26,6 @@ provider:
     FIREBASE_CLIENT_CERT_URL: ${self:custom.secrets.firebaseCredentials.client_x509_cert_url}
 
 functions:
-  pollGroup:
-    handler: functions.pollGroup
-    role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
-    events:
-      - http:
-          path: poll-group
-          method: post
-          cors: true
   getChannelsList:
     handler: functions.getChannelsList
     role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
@@ -73,4 +65,12 @@ functions:
       - http:
           path: poll
           method: post
-          cors: true        
+          cors: true          
+messageUser:
+    handler: functions.messageUser
+    role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
+    events:
+      - http:
+          path: message-user
+          method: post
+          cors: true
