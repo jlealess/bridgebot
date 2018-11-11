@@ -65,7 +65,8 @@ module.exports.submitPollQuestion = (event, context, callback) => {
 
   return db
     .collection("polls")
-    .add(body.payload)
+    .doc((body.payload.pollId).toString())
+    .set(body.payload)
     .then(ref => ({
       statusCode: 200,
       headers: COMMON_HEADERS,
