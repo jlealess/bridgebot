@@ -57,7 +57,7 @@ functions:
       - http:
           path: polls
           method: get
-          cors: true        
+          cors: true
   getSinglePollQuestion:
     handler: functions.getSinglePollQuestion
     role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
@@ -65,7 +65,7 @@ functions:
       - http:
           path: poll
           method: post
-          cors: true          
+          cors: true
   messageUser:
     handler: functions.messageUser
     role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
@@ -74,3 +74,11 @@ functions:
           path: message-user
           method: post
           cors: true
+  handleUserResponse:
+      handler: functions.handleUserResponse
+      role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
+      events:
+        - http:
+            path: handle-user-response
+            method: post
+            cors: true

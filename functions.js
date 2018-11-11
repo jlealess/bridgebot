@@ -1,5 +1,6 @@
 const { WebClient } = require("@slack/client");
 const { parse } = require("querystring");
+const fetch = require("node-fetch");
 
 // use this to make firebase queries!
 const { db } = require("./db");
@@ -10,6 +11,11 @@ const COMMON_HEADERS = {
   "content-type": "application/json",
   "Access-Control-Allow-Origin": "*"
 };
+
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://iwabvn0ttj.execute-api.us-east-1.amazonaws.com/dev"
+    : "http://localhost:3001";
 
 module.exports.getChannelsList = (event, context, callback) => {
   const web = new WebClient(token);
@@ -65,16 +71,27 @@ module.exports.submitPollQuestion = (event, context, callback) => {
 
   return db
     .collection("polls")
-    .doc((body.payload.pollId).toString())
+    .doc(body.payload.pollId.toString())
     .set(body.payload)
-    .then(ref => ({
-      statusCode: 200,
-      headers: COMMON_HEADERS,
-      body: JSON.stringify({
-        success: true,
-        message: ref.id
-      })
-    }));
+    .then(ref => {
+      // hook up to messaging users here
+      return fetch(`${API_BASE_URL}/user-list`, {
+        method: "POST",
+        headers: COMMON_HEADERS,
+        body: JSON.stringify({
+          usergroup: "CDCRXBSHL"
+        })
+      }).then(data => ({ ...data, body: { success: true, message: ref.id } }));
+    })
+    .catch(err => {
+      return {
+        statusCode: 500,
+        headers: COMMON_HEADERS,
+        body: JSON.stringify({
+          error: err.message
+        })
+      };
+    });
 };
 
 module.exports.getSinglePollQuestion = (event, context, callback) => {
@@ -132,7 +149,7 @@ const loopThroughUsers = users => {
   members.forEach(member => messageUser(member));
 };
 
-const messageUser = (event) => {
+const messageUser = event => {
   const web = new WebClient(token);
   return web.chat
     .postMessage({
@@ -158,26 +175,36 @@ const messageUser = (event) => {
               name: "answer",
               text: "Maybe",
               type: "button",
-              value: "maybe",
+              value: "maybe"
             }
-          ]
+          ],
+          callback_id: "respond_to_poll"
         }
       ]
     })
     .then(res => {
-      return { 
-        statusCode: 200, 
-        headers: COMMON_HEADERS, 
-        body: JSON.stringify(res) 
+      return {
+        statusCode: 200,
+        headers: COMMON_HEADERS,
+        body: JSON.stringify(res)
       };
     })
     .catch(err => {
-      return { 
-        statusCode: 500, 
-        headers: COMMON_HEADERS, 
+      return {
+        statusCode: 500,
+        headers: COMMON_HEADERS,
         body: JSON.stringify({
           error: err.message
         })
       };
     });
+};
+
+module.exports.handleUserResponse = (event, context, callback) => {
+  // record responses to firebase here
+  callback(null, {
+    statusCode: 200,
+    headers: COMMON_HEADERS,
+    body: JSON.stringify({ ok: "ok" })
+  });
 };
