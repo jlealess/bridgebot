@@ -75,10 +75,10 @@ functions:
           method: post
           cors: true
   handleUserResponse:
-      handler: functions.handleUserResponse
-      role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
-      events:
-        - http:
-            path: handle-user-response
-            method: post
-            cors: true
+    handler: functions.handleUserResponse
+    role: arn:aws:iam::903524011484:role/bridgebot-lambda-role
+    events:
+      - http:
+          path: handle-user-response
+          method: post
+          cors: true

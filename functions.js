@@ -68,13 +68,13 @@ module.exports.getUserList = (event, context, callback) => {
 module.exports.submitPollQuestion = (event, context, callback) => {
   const body = JSON.parse(event.body);
   global.selectedQuestion = body.payload.pollQuestion;
+  global.pollID = body.payload.pollId.toString();
 
   return db
     .collection("polls")
     .doc(body.payload.pollId.toString())
     .set(body.payload)
     .then(ref => {
-      // hook up to messaging users here
       return fetch(`${API_BASE_URL}/user-list`, {
         method: "POST",
         headers: COMMON_HEADERS,
@@ -178,33 +178,41 @@ const messageUser = event => {
               value: "maybe"
             }
           ],
-          callback_id: "respond_to_poll"
+          callback_id: global.pollID
         }
       ]
     })
     .then(res => {
-      return {
-        statusCode: 200,
-        headers: COMMON_HEADERS,
-        body: JSON.stringify(res)
-      };
+      return { statusCode: 200, headers: COMMON_HEADERS, body: JSON.stringify(res) };
     })
     .catch(err => {
-      return {
-        statusCode: 500,
-        headers: COMMON_HEADERS,
-        body: JSON.stringify({
-          error: err.message
-        })
-      };
+      return { statusCode: 500, headers: COMMON_HEADERS, body: JSON.stringify(
+          {
+            error: err.message
+          }
+        ) };
     });
 };
 
 module.exports.handleUserResponse = (event, context, callback) => {
-  // record responses to firebase here
-  callback(null, {
-    statusCode: 200,
-    headers: COMMON_HEADERS,
-    body: JSON.stringify({ ok: "ok" })
-  });
+  const data = decodeURIComponent(event.body);
+  const response = JSON.parse(data.substring(8));
+  const clickedAnswer = response.actions[0].value;
+  const pollId = response.callback_id;
+  const answer = {answer: clickedAnswer, pollId};
+
+  return db
+    .collection("responses")
+    .doc()
+    .set(answer)
+    .then(res => {
+      return { statusCode: 200, headers: COMMON_HEADERS, body: `You answered '${clickedAnswer}'. Thanks for participating in the poll!` };
+    })
+    .catch(err => {
+      return { statusCode: 500, headers: COMMON_HEADERS, body: JSON.stringify(
+        {
+          error: err.message
+        }
+      )};
+    });
 };
