@@ -12,7 +12,8 @@
   "license": "MIT",
   "dependencies": {
     "@slack/client": "^4.8.0",
-    "firebase-admin": "^6.0.0"
+    "firebase-admin": "^6.0.0",
+    "node-fetch": "^2.2.1"
   },
   "devDependencies": {
     "nodemon": "^1.18.4",
